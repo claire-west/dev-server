@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -67,10 +68,24 @@ func readServices() []Service {
 	return services
 }
 
+type DirWithHtmlFallback struct {
+	dir http.Dir
+}
+
+func (d DirWithHtmlFallback) Open (name string) (http.File, error) {
+	f, err := d.dir.Open(name)
+	if os.IsNotExist(err) && filepath.Ext(name) == "" {
+		f, err = d.dir.Open(name + ".html")
+	}
+	return f, err
+}
+
 func startService(service Service) *http.Server {
-    fsHandler := http.FileServer(http.Dir(service.path))
+	dir := DirWithHtmlFallback{http.Dir(service.path)}
+    fsHandler := http.FileServer(dir)
     handler := http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
    		log.Println(req.URL.Path)
+
    		fsHandler.ServeHTTP(resp, req)
     })
 
