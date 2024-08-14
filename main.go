@@ -85,7 +85,7 @@ func startService(service Service) *http.Server {
     fsHandler := http.FileServer(dir)
     handler := http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
    		log.Println(req.URL.Path)
-
+     	resp.Header().Add("access-control-allow-origin", "*")
    		fsHandler.ServeHTTP(resp, req)
     })
 
