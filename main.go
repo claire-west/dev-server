@@ -34,7 +34,6 @@ func main() {
 	for _, service := range services {
 		server := startService(service)
 		server.RegisterOnShutdown(func() {
-			const S = "\033[91m"
 			log.Printf("%s%d%s → %sStopped%s\n", Y, service.port, R, C, R)
 			waitGroup.Done()
 		})
@@ -92,6 +91,7 @@ func startService(service Service) *http.Server {
     handler := http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
    		log.Printf("%s%s%s%s%s", C, service.path, B, req.URL.Path, R)
 
+     	resp.Header().Add("access-control-allow-origin", "*")
    		fsHandler.ServeHTTP(resp, req)
     })
 
