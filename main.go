@@ -19,6 +19,11 @@ type Service struct {
 	port int
 }
 
+const Y = "\033[33m"
+const B = "\033[34m"
+const C = "\033[36m"
+const R = "\033[0m"
+
 func main() {
 	var waitGroup sync.WaitGroup
 
@@ -29,15 +34,16 @@ func main() {
 	for _, service := range services {
 		server := startService(service)
 		server.RegisterOnShutdown(func() {
-			log.Println("No longer listening on port", service.port)
+			const S = "\033[91m"
+			log.Printf("%s%d%s → %sStopped%s\n", Y, service.port, R, C, R)
 			waitGroup.Done()
 		})
 		servers = append(servers, server)
 	}
 
-	done := make(chan os.Signal, 1)
-    signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-    <-done
+	interrupted := make(chan os.Signal, 1)
+    signal.Notify(interrupted, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+    <-interrupted
 
     ctx := context.Background()
     for _, server := range servers {
@@ -84,8 +90,8 @@ func startService(service Service) *http.Server {
 	dir := DirWithHtmlFallback{http.Dir(service.path)}
     fsHandler := http.FileServer(dir)
     handler := http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-   		log.Println(req.URL.Path)
-     	resp.Header().Add("access-control-allow-origin", "*")
+   		log.Printf("%s%s%s%s%s", C, service.path, B, req.URL.Path, R)
+
    		fsHandler.ServeHTTP(resp, req)
     })
 
@@ -100,7 +106,7 @@ func startService(service Service) *http.Server {
 			log.Fatal(err)
 		}
 	}()
-	log.Println("Serving", service.path, "on port", service.port)
+	log.Printf("%s%d%s → %s%s%s\n", Y, service.port, R, C, service.path, R)
 
     return server
 }
