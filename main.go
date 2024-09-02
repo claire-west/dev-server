@@ -25,6 +25,11 @@ const C = "\033[36m"
 const R = "\033[0m"
 
 func main() {
+	if len(os.Args) < 2 || len(os.Args[1]) == 0 {
+		log.Println("No services file provided.")
+		return
+	}
+
 	var waitGroup sync.WaitGroup
 
 	services := readServices()
