@@ -1,8 +1,6 @@
 /*
 dev-srv hosts multiple static file directories, each on its own port.
 
-https://github.com/claire-west/dev-server
-
 Usage:
 
 	dev-srv
