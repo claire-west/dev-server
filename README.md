@@ -12,4 +12,4 @@ Define a set of services in a file in the following format:
 	8080=/home/user/git/myfirstproject
 	9090=../coolwebthing/public
 
-The default value for <file> is "./services", relative to the location of the executable.
+The default value for `<file>` is `./services`, relative to the location of the executable.
