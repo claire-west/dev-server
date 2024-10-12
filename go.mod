@@ -1,3 +1,3 @@
-module dev-server
+module dev-srv
 
 go 1.22.5

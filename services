@@ -1,4 +1,4 @@
-../cv4x.net,8080
-../svstudio-guides,8081
-../js-lib,8082
-../cvjs,8083
+8080=../cv4x.net
+8081=../svstudio-guides
+8082=../js-lib
+8083=../cvjs

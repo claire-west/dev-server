@@ -1,3 +1,20 @@
+/*
+dev-srv hosts multiple static file directories, each on its own port.
+
+https://github.com/claire-west/dev-server
+
+Usage:
+
+	dev-srv
+	dev-srv [<file>]
+
+Define a set of services in a file in the following format:
+
+	8080=/home/user/git/myfirstproject
+	9090=../coolwebthing/public
+
+If no argument is provided, <file> will default to "services".
+*/
 package main
 
 import (
@@ -25,14 +42,16 @@ const C = "\033[36m"
 const R = "\033[0m"
 
 func main() {
+	var serviceFile string
 	if len(os.Args) < 2 || len(os.Args[1]) == 0 {
-		log.Println("No services file provided.")
-		return
+		serviceFile = "services"
+	} else {
+		serviceFile = os.Args[1]
 	}
 
 	var waitGroup sync.WaitGroup
 
-	services := readServices()
+	services := readServices(serviceFile)
 	waitGroup.Add(len(services))
 
 	var servers []*http.Server
@@ -57,20 +76,20 @@ func main() {
 	waitGroup.Wait()
 }
 
-func readServices() []Service {
-	read, err := os.Open(os.Args[1])
+func readServices(fileName string) []Service {
+	read, err := os.Open(fileName)
 	if err != nil { panic(err) }
 
 	scanner := bufio.NewScanner(read)
 
 	var services []Service
 	for scanner.Scan() {
-		parts := strings.Split(scanner.Text(), ",")
-		port, err := strconv.Atoi(parts[1])
+		parts := strings.Split(scanner.Text(), "=")
+		port, err := strconv.Atoi(parts[0])
 		if err != nil { panic(err) }
 
 		services = append(services, Service{
-			path: parts[0],
+			path: parts[1],
 			port: port,
 		})
 	}
