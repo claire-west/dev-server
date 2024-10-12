@@ -44,7 +44,11 @@ const R = "\033[0m"
 func main() {
 	var serviceFile string
 	if len(os.Args) < 2 || len(os.Args[1]) == 0 {
-		serviceFile = "services"
+		executable, err := os.Executable()
+	    if err != nil {
+	        panic(err)
+	    }
+		serviceFile = filepath.Dir(executable) + "/services"
 	} else {
 		serviceFile = os.Args[1]
 	}
