@@ -41,10 +41,12 @@ const R = "\033[0m"
 
 func main() {
 	var serviceFile string
+	executable, err := os.Executable()
+	if err != nil { panic(err) }
+	dir := filepath.Dir(executable);
+
 	if len(os.Args) < 2 || len(os.Args[1]) == 0 {
-		executable, err := os.Executable()
-	    if err != nil { panic(err) }
-		serviceFile = filepath.Dir(executable) + "/services"
+		serviceFile = dir + "/services"
 	} else {
 		serviceFile = os.Args[1]
 	}
@@ -56,7 +58,7 @@ func main() {
 
 	var servers []*http.Server
 	for _, service := range services {
-		server := startService(service)
+		server := startService(service, filepath.Dir(serviceFile))
 		server.RegisterOnShutdown(func() {
 			log.Printf("%s%d%s → %sStopped%s\n", Y, service.port, R, C, R)
 			waitGroup.Done()
@@ -94,6 +96,7 @@ func readServices(fileName string) []Service {
 		})
 	}
 
+	read.Close()
 	return services
 }
 
@@ -109,8 +112,8 @@ func (d DirWithHtmlFallback) Open (name string) (http.File, error) {
 	return f, err
 }
 
-func startService(service Service) *http.Server {
-	dir := DirWithHtmlFallback{http.Dir(service.path)}
+func startService(service Service, rootDir string) *http.Server {
+	dir := DirWithHtmlFallback{http.Dir(rootDir + "/" + service.path)}
     fsHandler := http.FileServer(dir)
     handler := http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
    		log.Printf("%s%s%s%s%s", C, service.path, B, req.URL.Path, R)
