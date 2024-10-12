@@ -13,7 +13,7 @@ Define a set of services in a file in the following format:
 	8080=/home/user/git/myfirstproject
 	9090=../coolwebthing/public
 
-If no argument is provided, <file> will default to "services".
+The default value for <file> is "./services", relative to the location of the executable.
 */
 package main
 
@@ -45,9 +45,7 @@ func main() {
 	var serviceFile string
 	if len(os.Args) < 2 || len(os.Args[1]) == 0 {
 		executable, err := os.Executable()
-	    if err != nil {
-	        panic(err)
-	    }
+	    if err != nil { panic(err) }
 		serviceFile = filepath.Dir(executable) + "/services"
 	} else {
 		serviceFile = os.Args[1]
