@@ -259,7 +259,7 @@ func LoggingHandler(next http.Handler, service Service) http.Handler {
 			}
 		}
 
-		log.Printf("%s%d%s ← %s%d %s %s%s%s", Y, service.port, X, M, wrapped.status, http.StatusText(wrapped.status), W, string(body), X)
+		log.Printf("%s%d%s ← %s%d %s %s%s%s", Y, service.port, X, M, wrapped.status, http.StatusText(wrapped.status), W, body, X)
 	})
 }
 
@@ -273,12 +273,15 @@ func startService(service Service) *http.Server {
 			resp.Header().Add("access-control-allow-origin", "*")
 			handler.ServeHTTP(resp, req)
 		}),
+		ReadTimeout: time.Second * 5,
 	}
 
 	go func() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			log.Printf("%s%d%s → %sError%s %v", Y, service.port, X, R, X, err)
-			stopService(server, context.Background())
+			if err := stopService(server, context.Background()); err != nil {
+				log.Printf("%s%d%s → %sFailed to stop server%s: %v", Y, service.port, X, R, X, err)
+			}
 		}
 	}()
 

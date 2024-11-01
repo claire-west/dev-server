@@ -1,0 +1,27 @@
+run:
+  tests: false
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  enable:
+    - bodyclose
+    - gofumpt
+    - goimports
+    - gosec
+    - nilerr
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - tparallel
+    - unconvert
+    - unparam
+    - whitespace
+
+linters-settings:
+  revive:
+    rules:
+      - name: var-naming
+        disabled: true
