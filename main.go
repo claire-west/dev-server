@@ -145,12 +145,9 @@ func start(services []Service) {
 		fmt.Println()
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-	defer cancel()
-
 	for _, server := range servers {
 		go func() {
-			if err := stopService(server, ctx); err != nil {
+			if err := stopService(server); err != nil {
 				wg.Done()
 			}
 		}()
@@ -279,7 +276,7 @@ func startService(service Service) *http.Server {
 	go func() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			log.Printf("%s%d%s → %sError%s %v", Y, service.port, X, R, X, err)
-			if err := stopService(server, context.Background()); err != nil {
+			if err := stopService(server); err != nil {
 				log.Printf("%s%d%s → %sFailed to stop server%s: %v", Y, service.port, X, R, X, err)
 			}
 		}
@@ -289,7 +286,10 @@ func startService(service Service) *http.Server {
 	return server
 }
 
-func stopService(server *http.Server, ctx context.Context) error {
+func stopService(server *http.Server) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+	defer cancel()
+
 	if err := server.Shutdown(ctx); err != nil {
 		log.Printf("%sError shutting down server%s: %v", R, X, err)
 		server.Close()
