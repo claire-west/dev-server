@@ -34,17 +34,6 @@ type Service struct {
 	port int
 }
 
-const (
-	R = "\033[31m"
-	G = "\033[32m"
-	Y = "\033[33m"
-	B = "\033[34m"
-	M = "\033[35m"
-	C = "\033[36m"
-	W = "\033[37m"
-	X = "\033[0m"
-)
-
 type RespFlagValue int
 
 var RespFlag RespFlagValue
@@ -129,7 +118,7 @@ func start(services []Service) {
 		server := startService(service)
 		servers[service.port] = server
 		server.RegisterOnShutdown(func() {
-			log.Printf("%s%d%s → %sStopped%s\n", Y, service.port, X, C, X)
+			log.Printf("%s → %s\n", Yellow(service.port), Cyan("stopped"))
 			delete(servers, service.port)
 			wg.Done()
 		})
@@ -163,7 +152,7 @@ func start(services []Service) {
 func readServices(servicefile string) []Service {
 	read, err := os.Open(servicefile)
 	if errors.Is(err, fs.ErrNotExist) {
-		log.Fatalf("%sUnable to read file%s: %s", R, X, servicefile)
+		log.Fatalf("%s: %s", Red("Unable to read file"), servicefile)
 	}
 	if err != nil {
 		panic(err)
@@ -176,7 +165,7 @@ func readServices(servicefile string) []Service {
 		parts := strings.Split(scanner.Text(), "=")
 		port, err := strconv.Atoi(parts[0])
 		if err != nil {
-			log.Fatalf("%sInvalid port number%s: %s", R, X, parts[0])
+			log.Fatalf("%s: %s", Red("Invalid port number"), parts[0])
 		}
 
 		services = append(services, Service{
@@ -230,7 +219,7 @@ func LoggingHandler(next http.Handler, service Service) http.Handler {
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		wrapped := WrapResponseWriter(resp)
 
-		log.Printf("%s%d%s → %s%s %s%s%s%s%s", Y, service.port, X, G, req.Method, C, service.path, B, req.URL.Path, X)
+		log.Printf("%s → %s %s%s", Yellow(service.port), Green(req.Method), Cyan(service.path), Blue(req.URL.Path))
 
 		next.ServeHTTP(wrapped, req)
 
@@ -239,7 +228,7 @@ func LoggingHandler(next http.Handler, service Service) http.Handler {
 		}
 
 		if RespFlag == Status {
-			log.Printf("%s%d%s ← %s%d %s%s", Y, service.port, X, M, wrapped.status, http.StatusText(wrapped.status), X)
+			log.Printf("%s ← %s %s", Yellow(service.port), Magenta(wrapped.status), Magenta(http.StatusText(wrapped.status)))
 			return
 		}
 
@@ -256,7 +245,7 @@ func LoggingHandler(next http.Handler, service Service) http.Handler {
 			}
 		}
 
-		log.Printf("%s%d%s ← %s%d %s %s%s%s", Y, service.port, X, M, wrapped.status, http.StatusText(wrapped.status), W, body, X)
+		log.Printf("%s ← %s %s %s", Yellow(service.port), Magenta(wrapped.status), Magenta(http.StatusText(wrapped.status)), body)
 	})
 }
 
@@ -267,22 +256,22 @@ func startService(service Service) *http.Server {
 	server := &http.Server{
 		Addr: ":" + strconv.Itoa(service.port),
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			resp.Header().Add("access-control-allow-origin", "*")
+			resp.Header().Add("Access-Control-Allow-Origin", "*")
 			handler.ServeHTTP(resp, req)
 		}),
 		ReadTimeout: time.Second * 5,
 	}
 
 	go func() {
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Printf("%s%d%s → %sError%s %v", Y, service.port, X, R, X, err)
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("%s → %s %v", Yellow(service.port), Red("Error"), err)
 			if err := stopService(server); err != nil {
-				log.Printf("%s%d%s → %sFailed to stop server%s: %v", Y, service.port, X, R, X, err)
+				log.Printf("%s → %s: %v", Yellow(service.port), Red("Failed to stop server"), err)
 			}
 		}
 	}()
 
-	log.Printf("%s%d%s → %s%s%s\n", Y, service.port, X, C, service.path, X)
+	log.Printf("%s → %s\n", Yellow(service.port), Cyan(service.path))
 	return server
 }
 
@@ -291,7 +280,7 @@ func stopService(server *http.Server) error {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("%sError shutting down server%s: %v", R, X, err)
+		log.Printf("%s: %v", Red("Error shutting down server"), err)
 		server.Close()
 		return err
 	}

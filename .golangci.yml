@@ -8,16 +8,30 @@ issues:
 linters:
   enable:
     - bodyclose
+    - canonicalheader
+    - containedctx
+    - copyloopvar
+    - err113
+    - errorlint
     - gofumpt
     - goimports
     - gosec
+    - makezero
     - nilerr
+    - noctx
+    - paralleltest
+    - perfsprint
+    - prealloc
     - revive
     - rowserrcheck
     - sqlclosecheck
+    - tenv
+    - thelper
     - tparallel
+    - usestdlibvars
     - unconvert
     - unparam
+    - wastedassign
     - whitespace
 
 linters-settings:
